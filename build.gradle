@@ -1,0 +1,64 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '2.0.1' //'1.2.3'
+    id 'idea'
+}
+
+repositories {
+    mavenLocal()
+    jcenter()
+    maven { url "https://plugins.gradle.org/m2/" }
+}
+
+version = '0.99.0-rc'
+sourceCompatibility = '1.8'
+
+String vertxVersion = '3.5.0'
+
+dependencies {
+    compile "io.vertx:vertx-core:$vertxVersion"
+    compile "io.vertx:vertx-unit:$vertxVersion"
+    compile "io.vertx:vertx-web:$vertxVersion"
+    // typescript support
+    // compile 'de.undercouch:vertx-lang-typescript:1.1.0'
+    compile 'com.intapp:vertx-guice:1.0'
+    // make java coding easier
+    compile 'org.projectlombok:lombok:1.16.18'
+
+    //  testsupport
+    testCompile "junit:junit:4.12"
+    testCompile "io.vertx:vertx-unit:$vertxVersion"
+}
+
+mainClassName = 'ar.com.phostech.microservice.poc.ApplicationLauncher'
+// This is important! To start a verticle with injected beans please use
+// prefix 'java-guice:' to allow GuiceVerticleFactory instantite and glue
+// over beans and verticles
+String mainVerticleName = 'java-guice:ar.com.phostech.microservice.poc.MainVerticle'
+
+shadowJar {
+    classifier = 'fat'
+    manifest {
+        attributes 'Main-Verticle': "$mainVerticleName"
+    }
+    mergeServiceFiles {
+        include 'META-INF/services/io.vertx.core.spi.VerticleFactory'
+    }
+}
+
+String watchForChange = 'src/**/*'
+String doOnChange = './gradlew classes'
+run {
+    args = [
+        'run',
+        "$mainVerticleName",
+        "--launcher-class=$mainClassName",
+        "--redeploy=$watchForChange",
+        "--on-redeploy=$doOnChange"
+    ]
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.0.0'
+}
