@@ -3,5 +3,5 @@ package ar.com.phostech.microservice.poc.modules;
 import ar.com.phostech.microservice.poc.domain.Greeting;
 
 public interface Dependency {
-    Greeting getGreetingMessage();
+    Greeting getGreetingMessage(String name);
 }

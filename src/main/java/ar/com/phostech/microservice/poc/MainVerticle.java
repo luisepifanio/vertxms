@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.intapp.vertx.guice.GuiceVerticleFactory;
 
 import ar.com.phostech.microservice.poc.modules.Dependency;
 import ar.com.phostech.microservice.poc.verticles.GreeterVerticle;
@@ -85,7 +86,7 @@ public class MainVerticle extends AbstractVerticle {
     private static final String asDeploymentDescriptor(final Class<?> verticle){
         String deploymentName = verticle.getName();
         if (isAnnotationPresent(verticle, Inject.class)) {
-            deploymentName = "java-guice:" + deploymentName;
+            deploymentName = GuiceVerticleFactory.PREFIX + ":" +deploymentName;
         }
         log.info("Verticle: "+verticle.getCanonicalName()+" deployed as '"+ deploymentName +"'");
         return deploymentName;

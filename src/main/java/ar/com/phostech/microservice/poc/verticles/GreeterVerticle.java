@@ -15,8 +15,7 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 
 /**
- * Created by levontamrazov on 2017-02-02.
- * Worker verticle that will process requests through the event
+ * Verticle that will process requests through the event
  * bus
  */
 public class GreeterVerticle extends AbstractVerticle{
@@ -47,7 +46,7 @@ public class GreeterVerticle extends AbstractVerticle{
             // Parse the body into a json object, and call the service with
             // the required parameters
             JsonObject data = new JsonObject(m.body());
-            Greeting result = service.getGreetingMessage();
+            Greeting result = service.getGreetingMessage("Jane Doe");
 
             // reply to the sender or fail the message.
             try{
