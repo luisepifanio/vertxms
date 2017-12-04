@@ -49,16 +49,27 @@ shadowJar {
 
 String watchForChange = 'src/**/*'
 String doOnChange = './gradlew classes'
+File jul = new File('src/main/resources/vertx-default-jul-logging.properties')
 run {
     args = [
-        'run',
-        "$mainVerticleName",
-        "--launcher-class=$mainClassName",
-        "--redeploy=$watchForChange",
-        "--on-redeploy=$doOnChange"
+        'run'
+        , "$mainVerticleName"
+        , "--launcher-class=$mainClassName"
+        , "--redeploy=$watchForChange"
+        , "--on-redeploy=$doOnChange"
+        //, "-Djava.util.logging.config.file=${ jul.getAbsolutePath() }"
+        //, "-Djava.util.logging.ConsoleHandler.formatter=ar.com.phostech.loging.formatter.ApplicationFormatter"
     ]
 }
 
 task wrapper(type: Wrapper) {
     gradleVersion = '4.0.0'
+}
+
+task initSourceFolders {
+  doLast {
+    sourceSets*.java.srcDirs*.each { it.mkdirs() }
+    // sourceSets*.groovy.srcDirs*.each { it.mkdirs() }
+    sourceSets*.resources.srcDirs*.each { it.mkdirs() }
+  }
 }

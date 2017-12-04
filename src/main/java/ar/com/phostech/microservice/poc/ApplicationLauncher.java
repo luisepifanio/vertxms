@@ -1,6 +1,5 @@
 package ar.com.phostech.microservice.poc;
 
-import ar.com.phostech.microservice.poc.modules.BusinessModule;
 import com.intapp.vertx.guice.GuiceVertxLauncher;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -9,7 +8,24 @@ import io.vertx.core.Launcher;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
+import java.util.logging.LogManager;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.intapp.vertx.guice.GuiceVertxLauncher;
+
+import ar.com.phostech.microservice.poc.modules.BusinessModule;
+import io.vertx.core.Launcher;
+import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 /**
  * Examples which shows the following:
@@ -26,7 +42,7 @@ public class ApplicationLauncher extends GuiceVertxLauncher {
      * @param args the user command line arguments. For supported command line arguments please see {@link Launcher}.
      */
     public static void main(String[] args) {
-        log.info("Running");
+        log.info("Running on:" + new File(".").getAbsolutePath());
         new ApplicationLauncher().dispatch(args);
     }
 
