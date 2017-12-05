@@ -3,6 +3,8 @@ package ar.com.phostech.loging.formatter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -14,17 +16,16 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 
-class ApplicationFormatter extends Formatter {
+public class ApplicationFormatter extends Formatter {
 
-    public ApplicationFormatter() {
-        System.out.println("Instanciando ApplicationFormatter");
-    }
+    public ApplicationFormatter() {}
 
     @Override
     public synchronized String format(LogRecord record) {
 
         // Date and time
-        String formatedDate = formatIsoUtcDateTime(new Date(record.getMillis()));
+        String formatedDate = fromMillis(record.getMillis()).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        // String formatedDate = formatIsoUtcDateTime(new Date(record.getMillis()));
 
         String className = Optional.ofNullable(record.getSourceClassName()).orElse(record.getLoggerName());
 
@@ -33,15 +34,18 @@ class ApplicationFormatter extends Formatter {
         String message = formatMessage(record);
         String level = record.getLevel().getName();
 
-        StringBuilder sb = new StringBuilder().append(asKeyValueTag("eventdate", formatedDate))
-                .append(asKeyValueTag("level", level)).append(asKeyValueTag("class", className))
-                .append(asKeyValueTag("method", methodName)).append(" ").append(message).append("\n");
+        StringBuilder sb = new StringBuilder()
+            .append(asKeyValueTag("eventdate", formatedDate))
+            .append(asKeyValueTag("level", level))
+            .append(asKeyValueTag("class", className))
+            .append(asKeyValueTag("method", methodName))
+            .append(" ").append(message)
+            .append("\n");
 
         if (record.getThrown() != null) {
             sb.append(throwableAsString(record.getThrown()));
         }
 
-        System.out.print(sb.toString());
         return sb.toString();
     }
 
@@ -62,6 +66,9 @@ class ApplicationFormatter extends Formatter {
         if (null == key || null == value) {
             return "";
         }
+        if(0 == value.length()){
+            return "";
+        }
         return new StringBuilder().append("[").append(key).append(":").append(value).append("]").toString();
     }
 
@@ -72,6 +79,10 @@ class ApplicationFormatter extends Formatter {
         return ZonedDateTime.ofInstant(date.toInstant(), ZoneId.of("UTC"))
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ"));
     }
+
+    private static OffsetDateTime fromMillis(long epochMillis) {
+        return OffsetDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneId.systemDefault());
+      }
 
     public static void main(String[] args) {
         Logger logger = Logger.getLogger("TEST");
