@@ -10,10 +10,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Optional;
-import java.util.logging.ConsoleHandler;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 
 
 public class ApplicationFormatter extends Formatter {
@@ -83,20 +81,4 @@ public class ApplicationFormatter extends Formatter {
     private static OffsetDateTime fromMillis(long epochMillis) {
         return OffsetDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneId.systemDefault());
       }
-
-    public static void main(String[] args) {
-        Logger logger = Logger.getLogger("TEST");
-        logger.setUseParentHandlers(false);
-
-        Formatter formatter = new ApplicationFormatter();
-        ConsoleHandler handler = new ConsoleHandler();
-        handler.setFormatter(formatter);
-
-        logger.addHandler(handler);
-
-        logger.info("Example of creating custom formatter.");
-        logger.warning("A warning message.");
-        logger.severe("A severe message.");
-    }
-
 }
