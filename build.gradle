@@ -1,7 +1,8 @@
 plugins {
     id 'java'
+    id 'groovy'
     id 'application'
-    id 'com.github.johnrengelman.shadow' version '2.0.1' //'1.2.3'
+    id "com.github.johnrengelman.shadow" version "2.0.2"
     id 'idea'
 }
 
@@ -10,7 +11,7 @@ repositories {
     jcenter()
     maven { url "https://plugins.gradle.org/m2/" }
 }
-
+group "ar.com.phostech.vertx.demo"
 version = '0.99.0-rc'
 sourceCompatibility = '1.8'
 
@@ -26,8 +27,13 @@ dependencies {
     // make java coding easier
     compile 'org.projectlombok:lombok:1.16.18'
 
-    //  testsupport
-    testCompile "junit:junit:4.12"
+    ////////// TESTING RELATED
+    // We use the latest groovy 2.x version for Spock testing
+    compile 'org.codehaus.groovy:groovy-all:2.4.7'
+
+    // Use the awesome Spock testing and specification framework even with Java
+    testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
+    testCompile 'junit:junit:4.12'
     testCompile "io.vertx:vertx-unit:$vertxVersion"
 }
 
@@ -51,14 +57,23 @@ String watchForChange = 'src/**/*'
 String doOnChange = './gradlew classes'
 run {
     args = [
-        'run',
-        "$mainVerticleName",
-        "--launcher-class=$mainClassName",
-        "--redeploy=$watchForChange",
-        "--on-redeploy=$doOnChange"
+        'run'
+        , "$mainVerticleName"
+        , "--launcher-class=$mainClassName"
+        , "--redeploy=$watchForChange"
+        , "--on-redeploy=$doOnChange"
+        , "-Dconfprefix=src/main/resources"
     ]
 }
 
 task wrapper(type: Wrapper) {
     gradleVersion = '4.0.0'
+}
+
+task initSourceFolders {
+  doLast {
+    sourceSets*.java.srcDirs*.each { it.mkdirs() }
+    sourceSets*.groovy.srcDirs*.each { it.mkdirs() }
+    sourceSets*.resources.srcDirs*.each { it.mkdirs() }
+  }
 }

@@ -3,6 +3,7 @@ package ar.com.phostech.microservice.poc.verticles;
 import ar.com.phostech.microservice.poc.config.ApplicationPaths;
 import ar.com.phostech.microservice.poc.controllers.GlobalHandlers;
 import ar.com.phostech.microservice.poc.controllers.GreetController;
+import com.google.inject.Inject;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpHeaders;
@@ -10,23 +11,11 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import com.google.inject.Inject;
-
-import ar.com.phostech.microservice.poc.config.ApplicationPaths;
-import ar.com.phostech.microservice.poc.controllers.GlobalHandlers;
-import ar.com.phostech.microservice.poc.controllers.GreetController;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
-import io.vertx.core.http.HttpHeaders;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.web.handler.CorsHandler;
 
 public class ServerVerticle extends AbstractVerticle{
 

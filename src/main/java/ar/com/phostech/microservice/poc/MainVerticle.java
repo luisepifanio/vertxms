@@ -1,28 +1,30 @@
 package ar.com.phostech.microservice.poc;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Constructor;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
-
+import ar.com.phostech.functional.Either;
+import ar.com.phostech.microservice.poc.modules.Dependency;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.intapp.vertx.guice.GuiceVerticleFactory;
-
-import ar.com.phostech.microservice.poc.modules.Dependency;
-import ar.com.phostech.microservice.poc.verticles.GreeterVerticle;
-import ar.com.phostech.microservice.poc.verticles.ServerVerticle;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Future;
-import io.vertx.core.Verticle;
-import io.vertx.core.Vertx;
+import io.vertx.core.*;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AccessibleObject;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.text.MessageFormat.format;
 
 /**
  * Implements verticle to show dependency injection in action.
@@ -31,6 +33,12 @@ import io.vertx.core.logging.LoggerFactory;
  * 2) Application specific dependency
  */
 public class MainVerticle extends AbstractVerticle {
+
+    //Constants
+    private static final String ENVIRONMENT_MODE = "env";
+    private static final String DEFAULT_MODE = "prod";
+    private static final String CONFIG_PREFIX ="confprefix";
+    private static final String DEFAULT_CONFIG_PREFIX ="";
 
     private static final Logger log = LoggerFactory.getLogger(MainVerticle.class);
 
@@ -46,32 +54,63 @@ public class MainVerticle extends AbstractVerticle {
     }
 
     /**
-    * Start method uses CompositeFuture to deploy all required verticles
-    *
-    * @param done
-    */
+     * Start method uses CompositeFuture to deploy all required verticles
+     *
+     * @param done
+     */
     @Override
     public void start(Future<Void> done) {
-        DeploymentOptions serverOpts = new DeploymentOptions()
-                .setWorkerPoolSize(Runtime.getRuntime().availableProcessors());
 
-        // TODO: Scan for verticles and then add all found
-        // TODO: Find a way to describe a complete verticle deployment
-        CompositeFuture.all(
-              deploy(vertx, ServerVerticle.class, serverOpts)
-             , deploy(vertx, GreeterVerticle.class, serverOpts)
-        ).setHandler(r -> {
-            if (r.succeeded()) {
-                done.complete();
-            } else {
-                done.fail(r.cause());
-            }
-        });
+        log.info("Main verticle configuration:\n" + this.config().toString());
+        log.info("processArgs:\n" + processArgs());
+
+        // Create a new JavaClassLoader
+        ClassLoader classLoader = this.getClass().getClassLoader();
+
+        Set<Either<Class<?>,ClassNotFoundException>> classesTried = config().getJsonObject("verticles")
+                .fieldNames()
+                .stream()
+                .map(className -> {
+                    //log.info(format("Trying to load class {0} ...",className));
+                    Either<Class<?>,ClassNotFoundException> classToLoad = Either.fromCatching(
+                            () -> classLoader.loadClass(className),
+                            ClassNotFoundException.class
+                    );
+                    return classToLoad;
+                })
+                .collect(Collectors.toSet())
+                ;
+
+        classesTried.stream()
+                .filter(either -> either.hasAlternative())
+                .forEach(failed -> System.out.println(failed.alternative().getMessage()));
+
+        List<Future> futureDeployments = classesTried.stream()
+                .filter(either -> either.hasExpected())
+                // TODO: Filter loaded classes according to implementation of 'Verticle'
+                //.filter(either -> either.expected().isAssignableFrom(Verticle.class))
+                .map(either -> {
+                    JsonObject doptsAsJson = config()
+                            .getJsonObject("verticles")
+                            .getJsonObject(either.expected().getName());
+                    DeploymentOptions dopts = new DeploymentOptions(doptsAsJson);
+                    return deploy(vertx, (Class<? extends Verticle>) either.expected(), dopts);
+                })
+                .collect(Collectors.toList());
+
+        CompositeFuture.all(futureDeployments)
+                .setHandler(r -> {
+                    if (r.succeeded()) {
+                        done.complete();
+                    } else {
+                        done.fail(r.cause());
+                    }
+                });
     }
 
     /**
      * Fast implementation to check if @Inject is present
-     *      */
+     */
     private static boolean isAnnotationPresent(Class<?> target, Class<? extends Annotation> annotation) {
         Preconditions.checkNotNull(annotation, "target annotations");
 
@@ -83,20 +122,21 @@ public class MainVerticle extends AbstractVerticle {
                 || Stream.of(target.getFields()).anyMatch(predicate);
     }
 
-    private static final String asDeploymentDescriptor(final Class<?> verticle){
+    private static final String asDeploymentDescriptor(final Class<?> verticle) {
         String deploymentName = verticle.getName();
         if (isAnnotationPresent(verticle, Inject.class)) {
-            deploymentName = GuiceVerticleFactory.PREFIX + ":" +deploymentName;
+            deploymentName = GuiceVerticleFactory.PREFIX + ":" + deploymentName;
         }
-        log.info("Verticle: "+verticle.getCanonicalName()+" deployed as '"+ deploymentName +"'");
+        log.info("Verticle: " + verticle.getCanonicalName() + " deployed as '" + deploymentName + "'");
         return deploymentName;
     }
 
     /**
      * Deploy a vertx-guice verticle on a vertx instance with deployment options
-     * @param vertx - Vertx instance to deploy on
+     *
+     * @param vertx    - Vertx instance to deploy on
      * @param verticle - Verticle class to deploy
-     * @param opts - Deployment options to use for deployment
+     * @param opts     - Deployment options to use for deployment
      * @return - Future that can be used to handle successful / failed deployments
      */
     private static <T extends Verticle> Future<Void> deploy(
@@ -106,21 +146,42 @@ public class MainVerticle extends AbstractVerticle {
         Future<Void> done = Future.future();
         String deploymentName = asDeploymentDescriptor(verticle);
 
-        //
-        JsonObject config = new JsonObject();
-        opts.setConfig(config);
+        log.info(format("Deploying {0} ...",deploymentName));
 
         vertx.deployVerticle(deploymentName, opts, r -> {
             if (r.succeeded()) {
-                System.out.println("Successfully deployed verticle: " +deploymentName);
+                log.info("Successfully deployed verticle: " + deploymentName);
                 done.complete();
             } else {
-                System.out.println("Failed to deploy verticle: " + deploymentName);
+                log.info("Failed to deploy verticle: " + deploymentName);
                 done.fail(r.cause());
             }
         });
 
         return done;
+    }
+
+    @Override
+    public JsonObject config() {
+        JsonObject configuration = context.config();
+
+        String environment = System.getProperty(ENVIRONMENT_MODE, DEFAULT_MODE);
+        String prefix = System.getProperty(CONFIG_PREFIX, DEFAULT_CONFIG_PREFIX);
+        String configPath = String.format(prefix + File.separator + "conf/%s/app.config.json", environment);
+        Path path = Paths.get(configPath);
+        log.debug("Read custom configuration from: " + path.toFile().getAbsolutePath() );
+        //Reading a file over and over is contra performant :(
+        Either<String, IOException> readFileEither = Either.fromCatching(
+                () -> new String(Files.readAllBytes(path), StandardCharsets.UTF_8),
+                IOException.class
+        );
+
+        JsonObject environmentConfiguration = readFileEither.fold(
+                s -> new JsonObject(s) ,
+                e -> new JsonObject("{}")
+        );
+
+        return configuration.mergeIn(environmentConfiguration, true);
     }
 
 }
