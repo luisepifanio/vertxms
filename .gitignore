@@ -76,11 +76,11 @@ local.properties
 .idea/**/sqlDataSources.xml
 .idea/**/dynamic.xml
 .idea/**/uiDesigner.xml
-
-# Gradle:
 .idea/**/gradle.xml
 .idea/**/libraries
-.gradle/**/*.*
+
+# Gradle:
+**/.gradle/**/*.*
 
 # CMake
 cmake-build-debug/
