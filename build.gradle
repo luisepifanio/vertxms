@@ -1,0 +1,21 @@
+subprojects {
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        jcenter()
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+
+    task initSourceFolders {
+        doLast {
+            sourceSets*.java.srcDirs*.each { it.mkdirs() }
+            sourceSets*.groovy.srcDirs*.each { it.mkdirs() }
+            sourceSets*.resources.srcDirs*.each { it.mkdirs() }
+        }
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.5.1'
+}
