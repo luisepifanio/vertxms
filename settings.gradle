@@ -1,4 +1,4 @@
-include ":apipoc", ":core", ":gradle-vertx-plugin"
+include ":api-poc", ":core", ":gradle-vertx-plugin"
 
 if (!JavaVersion.current().java8Compatible) {
   throw new IllegalStateException('''A Haiku:
