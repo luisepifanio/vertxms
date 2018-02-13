@@ -10,8 +10,9 @@ subprojects {
     task initSourceFolders {
         doLast {
             sourceSets*.java.srcDirs*.each { it.mkdirs() }
-            sourceSets*.groovy.srcDirs*.each { it.mkdirs() }
             sourceSets*.resources.srcDirs*.each { it.mkdirs() }
+            sourceSets*.kotlin.srcDirs*.each { it.mkdirs() }
+            sourceSets*.groovy.srcDirs*.each { it.mkdirs() }
         }
     }
 }

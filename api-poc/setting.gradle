@@ -1,1 +1,3 @@
-rootProject.name = "api-poc"
+// rootProject.name = "api-poc"
+
+include  ":core"

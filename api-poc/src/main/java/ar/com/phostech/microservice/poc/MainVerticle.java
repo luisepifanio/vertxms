@@ -2,6 +2,7 @@ package ar.com.phostech.microservice.poc;
 
 import ar.com.phostech.functional.Either;
 import ar.com.phostech.microservice.poc.modules.Dependency;
+import ar.com.phostech.vertx.core.env.ExecutionEnvironment;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.intapp.vertx.guice.GuiceVerticleFactory;
@@ -18,9 +19,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -165,11 +166,25 @@ public class MainVerticle extends AbstractVerticle {
     public JsonObject config() {
         JsonObject configuration = context.config();
 
-        String environment = System.getProperty(ENVIRONMENT_MODE, DEFAULT_MODE);
+        ExecutionEnvironment env = ExecutionEnvironment.INSTANCE;
+
+        Map<Supplier<Boolean>,String> options = new LinkedHashMap<>();
+        options.put(() -> env.development(),"dev");
+        options.put(() -> env.scope().toUpperCase().startsWith("TEST"),"test");
+        options.put(() -> true ,DEFAULT_MODE);
+
+        //String environment = System.getProperty(ENVIRONMENT_MODE, DEFAULT_MODE);
+        String environment = options.entrySet()
+                .stream()
+                .filter(entry -> entry.getKey().get())
+                .findFirst()
+                .flatMap(entry -> Optional.ofNullable(entry.getValue()))
+                .orElse(DEFAULT_MODE);
+
         String prefix = System.getProperty(CONFIG_PREFIX, DEFAULT_CONFIG_PREFIX);
         String configPath = String.format(prefix + File.separator + "conf/%s/app.config.json", environment);
         Path path = Paths.get(configPath);
-        log.debug("Read custom configuration from: " + path.toFile().getAbsolutePath() );
+        log.info("Read custom configuration from: " + path.toFile().getAbsolutePath() );
         //Reading a file over and over is contra performant :(
         Either<String, IOException> readFileEither = Either.fromCatching(
                 () -> new String(Files.readAllBytes(path), StandardCharsets.UTF_8),
