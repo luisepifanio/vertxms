@@ -36,7 +36,6 @@ import static java.text.MessageFormat.format;
 public class MainVerticle extends AbstractVerticle {
 
     //Constants
-    private static final String ENVIRONMENT_MODE = "env";
     private static final String DEFAULT_MODE = "prod";
     private static final String CONFIG_PREFIX ="confprefix";
     private static final String DEFAULT_CONFIG_PREFIX ="";

@@ -1,27 +1,31 @@
 buildscript {
     ext.kotlin_version = '1.2.21'
 
+    repositories {
+        mavenCentral()
+    }
+
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
-plugins {
-    id "org.jetbrains.kotlin.jvm" version '1.2.21'
-    // id 'application'
-}
-
-// mainClassName = "demo.HelloWorld"
-
 repositories {
     mavenCentral()
 }
 
+apply plugin: 'kotlin'
+
+// mainClassName = "demo.HelloWorld"
+
+
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    testCompile  'junit:junit:4.+'
+    // compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+
+    testCompile 'junit:junit:4.+'
     testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
 }
 
-test.getTestClassesDirs().plus(  project.tasks.compileTestKotlin.destinationDir )
+test.getTestClassesDirs().plus(project.tasks.compileTestKotlin.destinationDir)
 //test.testClassesDir = project.tasks.compileTestKotlin.destinationDir
