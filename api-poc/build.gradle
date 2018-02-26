@@ -9,21 +9,24 @@ group "ar.com.phostech.vertx.demo"
 version = '0.99.0-rc'
 sourceCompatibility = '1.8'
 
-String vertxVersion = '3.5.0'
+
+ext {
+    vertx_version = '3.5.0'
+}
 
 dependencies {
     // Core dependencies for this proof of concept
 
     compile project(":core")
 
-    compile "io.vertx:vertx-core:$vertxVersion"
-    compile "io.vertx:vertx-unit:$vertxVersion"
-    compile "io.vertx:vertx-web:$vertxVersion"
+    compile "io.vertx:vertx-core:$vertx_version"
+    compile "io.vertx:vertx-web:$vertx_version"
     // typescript support
     // compile 'de.undercouch:vertx-lang-typescript:1.1.0'
-    compile 'com.intapp:vertx-guice:1.0'
     // make java coding easier
     compile 'org.projectlombok:lombok:1.16.18'
+
+    compile 'com.intapp:vertx-guice:1.0'
 
     ////////// TESTING RELATED
     // We use the latest groovy 2.x version for Spock testing
@@ -32,7 +35,7 @@ dependencies {
     // Use the awesome Spock testing and specification framework even with Java
     testCompile "junit:junit:4.+"
     testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
-    testCompile "io.vertx:vertx-unit:$vertxVersion"
+    testCompile "io.vertx:vertx-unit:$vertx_version"
 }
 
 mainClassName = 'ar.com.phostech.microservice.poc.ApplicationLauncher'
@@ -53,6 +56,16 @@ shadowJar {
 
 String watchForChange = 'src/**/*'
 String doOnChange = './gradlew classes'
+
+println( [
+    'run'
+    , "$mainVerticleName"
+    , "--launcher-class=$mainClassName"
+    , "--redeploy=$watchForChange"
+    , "--on-redeploy=$doOnChange"
+    , "-Dconfprefix=src/main/resources"
+].join(' ') )
+
 run {
     args = [
         'run'

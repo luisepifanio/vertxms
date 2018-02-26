@@ -12,12 +12,14 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
+import java.util.stream.IntStream;
 
 
 public class ApplicationFormatter extends Formatter {
 
     public ApplicationFormatter() {}
 
+    //TODO: Missing parameter handling
     @Override
     public synchronized String format(LogRecord record) {
 
@@ -47,6 +49,49 @@ public class ApplicationFormatter extends Formatter {
         return sb.toString();
     }
 
+    /**
+     * Format the message string from a log record.
+     *
+     * <ul>
+     * <li>If there are no parameters, no formatter is used.
+     * <li>Otherwise, if the string contains "{{@literal<digit>}"
+     *     where {@literal <digit>} is in [0-9],
+     *     java.text.MessageFormat is used to format the string.
+     * <li>Otherwise no formatting is performed.
+     * </ul>
+     *
+     * @param  record  the log record containing the raw message
+     * @return   a localized and formatted message
+     */
+    @Override
+    public synchronized String formatMessage(LogRecord record) {
+
+        final String format = Optional.ofNullable(record)
+                                .map(LogRecord::getMessage)
+                                .orElse("");
+        // Do the formatting.
+        try {
+            Object parameters[] = record.getParameters();
+            if (parameters == null || parameters.length == 0) {
+                // No parameters.  Just return format string.
+                return format;
+            }
+
+            return IntStream.rangeClosed(0,9)
+                .mapToObj(i -> "{" + i)
+                .filter(i -> format.contains(i))
+                    .findFirst()
+                    .map(s ->  java.text.MessageFormat.format(format, parameters) )
+                    .orElse( format );
+
+        } catch (Exception ex) {
+            System.err.println("Please check format of '" + format + "'");
+            System.err.println(ex.toString());
+            // Formatting failed: use localized format string.
+            return format;
+        }
+    }
+
     public String throwableAsString(Throwable throwable) {
         if (null == throwable) {
             return "";
@@ -55,8 +100,7 @@ public class ApplicationFormatter extends Formatter {
         try (StringWriter sw = new StringWriter(); PrintWriter pw = new PrintWriter(sw)) {
             throwable.printStackTrace(pw);
             return sw.toString();
-        } catch (IOException ioe) {
-        } //
+        } catch (IOException ioe) { } // Do nothing
         return "";
     }
 

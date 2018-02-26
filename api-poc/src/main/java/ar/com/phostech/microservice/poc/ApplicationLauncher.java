@@ -1,31 +1,16 @@
 package ar.com.phostech.microservice.poc;
 
-import com.intapp.vertx.guice.GuiceVertxLauncher;
-import com.google.inject.Guice;
+import ar.com.phostech.microservice.poc.modules.BusinessModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.intapp.vertx.guice.GuiceVertxLauncher;
 import io.vertx.core.Launcher;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
-import java.util.logging.LogManager;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.intapp.vertx.guice.GuiceVertxLauncher;
-
-import ar.com.phostech.microservice.poc.modules.BusinessModule;
-import io.vertx.core.Launcher;
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 /**
  * Examples which shows the following:
@@ -42,15 +27,17 @@ public class ApplicationLauncher extends GuiceVertxLauncher {
      * @param args the user command line arguments. For supported command line arguments please see {@link Launcher}.
      */
     public static void main(String[] args) {
-        log.info("Running on:" + new File(".").getAbsolutePath());
+        log.info("Running on: {0}", new File(".").getAbsolutePath());
         new ApplicationLauncher().dispatch(args);
     }
 
     @Override
     protected Injector createInjector(Vertx vertx) {
+        // Just for knowing we can use custom Injectors
+        // Injector injector = Guice.createInjector(getModules(vertx));
+        // return injector;
         log.info("Creating injector");
-        Injector injector = Guice.createInjector(getModules(vertx));
-        return injector;
+        return super.createInjector(vertx);
     }
 
     @Override

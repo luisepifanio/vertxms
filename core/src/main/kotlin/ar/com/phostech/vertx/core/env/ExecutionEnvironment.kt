@@ -2,6 +2,10 @@ package ar.com.phostech.vertx.core.env
 
 import java.util.Optional.ofNullable
 
+/**
+ * IMPORTANT:
+ * Please don't keep any state on this object instance!
+ */
 object ExecutionEnvironment : RuntimeEnvironment {
 
     private val DEV = "[DEV]"

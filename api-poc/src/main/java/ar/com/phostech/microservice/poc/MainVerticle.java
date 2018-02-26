@@ -2,7 +2,7 @@ package ar.com.phostech.microservice.poc;
 
 import ar.com.phostech.functional.Either;
 import ar.com.phostech.microservice.poc.modules.Dependency;
-import ar.com.phostech.vertx.core.env.ExecutionEnvironment;
+import ar.com.phostech.vertx.core.env.RuntimeEnvironment;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.intapp.vertx.guice.GuiceVerticleFactory;
@@ -24,8 +24,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static java.text.MessageFormat.format;
 
 /**
  * Implements verticle to show dependency injection in action.
@@ -61,8 +59,8 @@ public class MainVerticle extends AbstractVerticle {
     @Override
     public void start(Future<Void> done) {
 
-        log.info("Main verticle configuration:\n" + this.config().toString());
-        log.info("processArgs:\n" + processArgs());
+        // log.info("Main verticle configuration:\n" + this.config().toString());
+        // log.info("processArgs:\n" + processArgs());
 
         // Create a new JavaClassLoader
         ClassLoader classLoader = this.getClass().getClassLoader();
@@ -71,7 +69,6 @@ public class MainVerticle extends AbstractVerticle {
                 .fieldNames()
                 .stream()
                 .map(className -> {
-                    //log.info(format("Trying to load class {0} ...",className));
                     Either<Class<?>,ClassNotFoundException> classToLoad = Either.fromCatching(
                             () -> classLoader.loadClass(className),
                             ClassNotFoundException.class
@@ -146,14 +143,14 @@ public class MainVerticle extends AbstractVerticle {
         Future<Void> done = Future.future();
         String deploymentName = asDeploymentDescriptor(verticle);
 
-        log.info(format("Deploying {0} ...",deploymentName));
+        log.info("Deploying {0} ...",deploymentName);
 
         vertx.deployVerticle(deploymentName, opts, r -> {
             if (r.succeeded()) {
-                log.info("Successfully deployed verticle: " + deploymentName);
+                log.info("Successfully deployed verticle: {0}",deploymentName );
                 done.complete();
             } else {
-                log.info("Failed to deploy verticle: " + deploymentName);
+                log.error("Failed to deploy verticle: {0}",deploymentName );
                 done.fail(r.cause());
             }
         });
@@ -165,7 +162,7 @@ public class MainVerticle extends AbstractVerticle {
     public JsonObject config() {
         JsonObject configuration = context.config();
 
-        ExecutionEnvironment env = ExecutionEnvironment.INSTANCE;
+        RuntimeEnvironment env = RuntimeEnvironment.get();
 
         Map<Supplier<Boolean>,String> options = new LinkedHashMap<>();
         options.put(() -> env.development(),"dev");
