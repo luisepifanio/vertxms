@@ -10,7 +10,9 @@ import ar.com.phostech.vertx.VertxApplication
 import ar.com.phostech.vertx.core.env.RuntimeEnvironment
 import com.google.inject.Inject
 import com.google.inject.Module
-import java.util.LinkedHashMap
+import io.vertx.core.eventbus.EventBus
+import io.vertx.core.logging.LoggerFactory
+import java.util.*
 import java.util.function.Supplier
 import kotlin.collections.ArrayList
 import kotlin.collections.set
@@ -44,7 +46,17 @@ class Main
     val binRouter: BinLookUpRouter
 ) : Application {
 
+    private val log = LoggerFactory.getLogger(Main::class.java)
+
     override fun configureRoutesOn(mounter: Mounter) {
+        Objects.requireNonNull(mounter,"mounter should not be null")
+        log.info("configuring routers")
         mounter.mount("/api", binRouter)
+    }
+
+    override fun configureConsumerOn(eventBus: EventBus) {
+        Objects.requireNonNull(eventBus,"eventBus should not be null")
+        log.info("configuring event consumers")
+        super.configureConsumerOn(eventBus)
     }
 }

@@ -1,5 +1,6 @@
 package ar.com.phostech.vertx;
 
+import ar.com.phostech.vertx.core.env.ConcurrentConstants;
 import ar.com.phostech.vertx.modules.VertxApplicationModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -35,6 +36,7 @@ public class VertxApplication {
         IntStream.rangeClosed(1, httpServersCount())
                 .forEach(i -> verticles.add(instantiateWithName("http-" + i, HttpServerVerticle.class)));
 
+        verticles.add(instantiateWithName("event-consumers", EventConsumerVerticle.class));
         aditionalVerticles().forEach((name, verticleClass) -> verticles.add(instantiateWithName(name, verticleClass)));
     }
 
@@ -64,14 +66,27 @@ public class VertxApplication {
     public Future<Void> start() {
         Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
         final List<Future> deployments = verticles.stream()
-                .map(this::deploy)
+                .map(verticle -> deploy(verticle))
                 .collect(Collectors.toList());
         return CompositeFuture.all(deployments).mapEmpty();
     }
 
+    // SMELL: Too Lazy to use a match/act pattern
     private Future<String> deploy(Verticle verticle) {
         final Future<String> deployment = Future.future();
-        vertx.deployVerticle(verticle, deployment);
+
+        if (verticle instanceof EventConsumerVerticle) {
+            final DeploymentOptions options = new DeploymentOptions()
+                    .setWorkerPoolName("mypool")
+                    .setWorkerPoolSize(ConcurrentConstants.INSTANCE.getIO_POOL_SIZE())
+                    .setWorker(true)
+                    //.setMultiThreaded(true)
+                    ;
+            vertx.deployVerticle(verticle, options, deployment);
+        } else {
+            vertx.deployVerticle(verticle, deployment);
+        }
+
         return deployment;
     }
 

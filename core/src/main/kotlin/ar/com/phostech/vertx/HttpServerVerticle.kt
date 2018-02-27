@@ -12,7 +12,9 @@ import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
 
 
-class HttpServerVerticle @Inject constructor(val configurator: RoutingConfigurer) : Mounter, AbstractVerticle() {
+class HttpServerVerticle
+@Inject constructor(val configurator: RoutingConfigurer) : Mounter, AbstractVerticle()
+{
 
     internal var root: Router
 
