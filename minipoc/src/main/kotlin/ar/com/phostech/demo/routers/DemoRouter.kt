@@ -8,12 +8,12 @@ import java.time.ZoneId
 import java.util.*
 
 
-class BinLookUpRouter : Mountable {
+class DemoRouter : Mountable {
     override fun mount(router: Router) {
         router.get("/metric/:metric_id").handler(this::getMetric)
     }
 
-    private fun getMetric(context: RoutingContext) {
+    protected fun getMetric(context: RoutingContext) {
         // TransactionTag.put(context.request(), "get_authentication_capability")
         val metricId: String = context.pathParam("metric_id")
 

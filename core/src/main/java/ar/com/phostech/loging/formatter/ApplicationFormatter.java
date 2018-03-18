@@ -17,7 +17,8 @@ import java.util.stream.IntStream;
 
 public class ApplicationFormatter extends Formatter {
 
-    public ApplicationFormatter() {}
+    public ApplicationFormatter() {
+    }
 
     //TODO: Missing parameter handling
     @Override
@@ -35,12 +36,12 @@ public class ApplicationFormatter extends Formatter {
         String level = record.getLevel().getName();
 
         StringBuilder sb = new StringBuilder()
-            .append(asKeyValueTag("eventdate", formatedDate))
-            .append(asKeyValueTag("level", level))
-            .append(asKeyValueTag("class", className))
-            .append(asKeyValueTag("method", methodName))
-            .append(" ").append(message)
-            .append("\n");
+                .append(asKeyValueTag("eventdate", formatedDate))
+                .append(asKeyValueTag("level", level))
+                .append(asKeyValueTag("class", className))
+                .append(asKeyValueTag("method", methodName))
+                .append(" ").append(message)
+                .append("\n");
 
         if (record.getThrown() != null) {
             sb.append(throwableAsString(record.getThrown()));
@@ -51,24 +52,24 @@ public class ApplicationFormatter extends Formatter {
 
     /**
      * Format the message string from a log record.
-     *
+     * <p>
      * <ul>
      * <li>If there are no parameters, no formatter is used.
      * <li>Otherwise, if the string contains "{{@literal<digit>}"
-     *     where {@literal <digit>} is in [0-9],
-     *     java.text.MessageFormat is used to format the string.
+     * where {@literal <digit>} is in [0-9],
+     * java.text.MessageFormat is used to format the string.
      * <li>Otherwise no formatting is performed.
      * </ul>
      *
-     * @param  record  the log record containing the raw message
-     * @return   a localized and formatted message
+     * @param record the log record containing the raw message
+     * @return a localized and formatted message
      */
     @Override
     public synchronized String formatMessage(LogRecord record) {
 
         final String format = Optional.ofNullable(record)
-                                .map(LogRecord::getMessage)
-                                .orElse("");
+                .map(LogRecord::getMessage)
+                .orElse("");
         // Do the formatting.
         try {
             Object parameters[] = record.getParameters();
@@ -77,13 +78,15 @@ public class ApplicationFormatter extends Formatter {
                 return format;
             }
 
-            return IntStream.rangeClosed(0,9)
-                .mapToObj(i -> "{" + i)
-                .filter(i -> format.contains(i))
-                    .findFirst()
-                    .map(s ->  java.text.MessageFormat.format(format, parameters) )
-                    .orElse( format );
+            final Boolean matched = IntStream.rangeClosed(0, 9)
+                    .mapToObj(i -> "{" + i)
+                    .anyMatch(format::contains);
 
+            if (matched) {
+                return java.text.MessageFormat.format(format, parameters);
+            } else {
+                return format;
+            }
         } catch (Exception ex) {
             System.err.println("Please check format of '" + format + "'");
             System.err.println(ex.toString());
@@ -100,7 +103,8 @@ public class ApplicationFormatter extends Formatter {
         try (StringWriter sw = new StringWriter(); PrintWriter pw = new PrintWriter(sw)) {
             throwable.printStackTrace(pw);
             return sw.toString();
-        } catch (IOException ioe) { } // Do nothing
+        } catch (IOException ioe) {
+        } // Do nothing
         return "";
     }
 
@@ -108,7 +112,7 @@ public class ApplicationFormatter extends Formatter {
         if (null == key || null == value) {
             return "";
         }
-        if(0 == value.length()){
+        if (0 == value.length()) {
             return "";
         }
         return new StringBuilder().append("[").append(key).append(":").append(value).append("]").toString();
@@ -124,5 +128,5 @@ public class ApplicationFormatter extends Formatter {
 
     private static OffsetDateTime fromMillis(long epochMillis) {
         return OffsetDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneId.systemDefault());
-      }
+    }
 }

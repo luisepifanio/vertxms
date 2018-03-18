@@ -3,10 +3,7 @@ package ar.com.phostech.demo
 import ar.com.phostech.demo.modules.BasicModule
 import ar.com.phostech.demo.modules.DevelopmentModule
 import ar.com.phostech.demo.modules.ProductionModule
-import ar.com.phostech.demo.routers.BinLookUpRouter
-import ar.com.phostech.vertx.Application
-import ar.com.phostech.vertx.Mounter
-import ar.com.phostech.vertx.VertxApplication
+import ar.com.phostech.vertx.*
 import ar.com.phostech.vertx.core.env.RuntimeEnvironment
 import com.google.inject.Inject
 import com.google.inject.Module
@@ -41,22 +38,31 @@ fun modules(): MutableIterable<Module>? {
     return modules
 }
 
+@JvmSuppressWildcards // Prevents troubles about Kotlin gerenic variance and Guice strict type checking.
 class Main
 @Inject constructor(
-    val binRouter: BinLookUpRouter
+    val mountables: Set<Mountable>,
+    val consumers: Set<EventBusConsumer>
 ) : Application {
 
     private val log = LoggerFactory.getLogger(Main::class.java)
 
     override fun configureRoutesOn(mounter: Mounter) {
-        Objects.requireNonNull(mounter,"mounter should not be null")
-        log.info("configuring routers")
-        mounter.mount("/api", binRouter)
+        Objects.requireNonNull(mounter, "mounter should not be null")
+        Objects.requireNonNull(mountables, "mountables should not be null")
+        //log.info("configuring routers")
+        mountables.stream().forEach({ mountable: Mountable ->
+            //log.info("mounting router ${mountable::class.java.name}")
+            mounter.mount("/api", mountable)
+        })
     }
 
     override fun configureConsumerOn(eventBus: EventBus) {
-        Objects.requireNonNull(eventBus,"eventBus should not be null")
-        log.info("configuring event consumers")
-        super.configureConsumerOn(eventBus)
+        Objects.requireNonNull(eventBus, "eventBus should not be null")
+        // log.info("configuring event consumers")
+        consumers.stream().forEach({ mountable: EventBusConsumer ->
+            //log.info("mounting consumer ${mountable::class.java.name}")
+            mountable.mount(eventBus)
+        })
     }
 }

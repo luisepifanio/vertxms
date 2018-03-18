@@ -68,7 +68,15 @@ public class VertxApplication {
         final List<Future> deployments = verticles.stream()
                 .map(verticle -> deploy(verticle))
                 .collect(Collectors.toList());
-        return CompositeFuture.all(deployments).mapEmpty();
+        return CompositeFuture.all(deployments)
+                .setHandler(asyncResult -> {
+                    if (asyncResult.succeeded()) {
+                        log.info("All verticles deployed!");
+                    } else {
+                        log.error("Gt some troubles deploying verticles", asyncResult.cause());
+                    }
+                })
+                .mapEmpty();
     }
 
     // SMELL: Too Lazy to use a match/act pattern

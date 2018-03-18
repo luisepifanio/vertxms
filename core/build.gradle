@@ -11,7 +11,7 @@ buildscript {
 }
 
 ext {
-    vertx_version = '3.4.2'
+    vertx_version = '3.5.1'
     kotlin_version = '1.2.21'
 }
 
@@ -38,8 +38,13 @@ dependencies {
 
     compile "io.vertx:vertx-core:$vertx_version"
     compile "io.vertx:vertx-web:$vertx_version"
+    compile "io.vertx:vertx-web-client:$vertx_version"
+    compile "io.vertx:vertx-circuit-breaker:$vertx_version"
 
-    compile 'com.google.inject:guice:4.1.0'
+    // Guice
+    compile group: 'com.google.inject', name: 'guice', version: '4.2.0'
+    compile group: 'com.google.inject.extensions', name: 'guice-multibindings', version: '4.2.0'
+
 
     testCompile 'junit:junit:4.+'
     testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
