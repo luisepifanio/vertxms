@@ -23,7 +23,6 @@ class HttpServerVerticle
     init {
         root = Router.router(vertx)
 
-
         // TODO Find a better place for this code.
         Json.mapper.apply {
             registerKotlinModule()
@@ -32,7 +31,6 @@ class HttpServerVerticle
         Json.prettyMapper.apply {
             registerKotlinModule()
         }
-
 
     }
 
