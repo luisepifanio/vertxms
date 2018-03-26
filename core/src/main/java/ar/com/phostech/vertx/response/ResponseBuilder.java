@@ -1,5 +1,6 @@
 package ar.com.phostech.vertx.response;
 
+import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -17,6 +18,14 @@ public class ResponseBuilder {
                 status,
                 throwable.toString().replace("[\r?\n]+", " "),
                 throwable);
+    }
+
+    public static <T> Response<T> fromFailure(int status, String message) {
+        return new FailedResponse<>(
+                status,
+                message,
+                Collections.emptyList()
+        );
     }
 
     public static <T> Response<T> fromThrowable(int status, String message, Throwable throwable) {

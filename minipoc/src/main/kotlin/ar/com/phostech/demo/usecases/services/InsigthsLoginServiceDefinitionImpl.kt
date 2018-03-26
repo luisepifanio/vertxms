@@ -20,7 +20,10 @@ class InsigthsLoginServiceDefinitionImpl(val eb: EventBus) : InsigthsLoginServic
             null,
             { asyncResult ->
 
-                val options = LinkedHashMap<Boolean, Function1<AsyncResult<Message<InsigthsCredentials>>, Response<InsigthsCredentials>>>()
+                val options = LinkedHashMap<
+                    Boolean,
+                    Function1<AsyncResult<Message<InsigthsCredentials>>, Response<InsigthsCredentials>>
+                    >()
                 options[true] = this::result
                 options[false] = this::fromThrowable
 

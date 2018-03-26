@@ -50,7 +50,7 @@ class CustomerSatisfactionConsumer
         ).orElse(false)
 
         if (available) {
-            log.info("Response from cache")
+            log.info("Response from cache: ${credentials.encode()}")
             respondWith(message, Supplier {
                 val stored = credentials.mapTo(InsigthsCredentials::class.java)
                 ResponseBuilder.from(stored)
@@ -109,7 +109,7 @@ class CustomerSatisfactionConsumer
 
     fun respondWith(message: Message<JsonObject>, supplier: Supplier<out Response<InsigthsCredentials>>) {
         message.reply(
-            JsonObject.mapFrom( // It is easier to store as a JsonObject since it is not a cyclic
+            JsonObject.mapFrom( // It is easier to store as a JsonObject since it is not a cyclic structure
                 supplier.get()
             )
         )

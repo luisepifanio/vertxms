@@ -1,12 +1,14 @@
 package ar.com.phostech.vertx
 
 import ar.com.phostech.vertx.exceptions.HttpFailureHandlerProvider
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.google.inject.Inject
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_JSON
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.http.HttpServer
 import io.vertx.core.http.HttpServerOptions
+import io.vertx.core.json.Json
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
@@ -20,6 +22,18 @@ class HttpServerVerticle
 
     init {
         root = Router.router(vertx)
+
+
+        // TODO Find a better place for this code.
+        Json.mapper.apply {
+            registerKotlinModule()
+        }
+
+        Json.prettyMapper.apply {
+            registerKotlinModule()
+        }
+
+
     }
 
     override fun mount(path: String, unit: Mountable) {
