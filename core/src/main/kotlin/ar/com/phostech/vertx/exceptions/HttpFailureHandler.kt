@@ -1,7 +1,7 @@
 package ar.com.phostech.vertx.exceptions
 
-import ar.com.phostech.vertx.response.FailedResponse
 import ar.com.phostech.vertx.response.Response
+import ar.com.phostech.vertx.response.ResponseBuilder.fromThrowable
 import io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_JSON
 import io.vertx.core.Handler
 import io.vertx.core.http.HttpHeaders.CONTENT_TYPE
@@ -9,44 +9,31 @@ import io.vertx.ext.web.RoutingContext
 import java.util.*
 import java.util.function.Function
 import java.util.function.Supplier
-import kotlin.collections.ArrayList
 
 class HttpFailureHandler(val showDetails: Boolean) : Handler<RoutingContext> {
     override fun handle(context: RoutingContext) {
         val response = context.response()
         val failure = context.failure()
 
-        val stack = ArrayList<String>()
-
-        if (showDetails && context.failure() != null) {
-            stack.addAll(
-                context.failure().stackTrace
-                    .map { element -> element.toString() }
-            )
-        }
-
-        val options = LinkedHashMap<Supplier<Boolean>, Function<RoutingContext, out Response>>()
+        val options = LinkedHashMap<Supplier<Boolean>, Function<RoutingContext, out Response<Any>>>()
         options[Supplier { !context.statusCode().equals(-1) }] = Function { ctx: RoutingContext ->
-            FailedResponse(
+            fromThrowable<Any>(
                 ctx.statusCode(),
                 ctx.response().statusMessage,
-                stack
+                context.failure()
             )
         }
 
         options[Supplier { failure is HttpFailure }] = Function { ctx: RoutingContext ->
-            FailedResponse(
+            fromThrowable<Any>(
                 (ctx.failure() as HttpFailure).status.code(),
-                ctx.failure().toString().replace("[\r?\n]+", " "),
-                stack
+                context.failure()
             )
         }
 
         options[Supplier { true }] = Function { ctx: RoutingContext ->
-            FailedResponse(
-                500,
-                ctx.failure().toString().replace("[\r?\n]+", " "),
-                stack
+            fromThrowable<Any>(
+                ctx.failure()
             )
         }
 

@@ -1,14 +1,16 @@
-package ar.com.phostech.demo.consumers
+package ar.com.phostech.demo.interface_adapters.consumers
 
 import ar.com.phostech.demo.configuration.ConfigurationKeys.HOTJAR_EMAIL
 import ar.com.phostech.demo.configuration.ConfigurationKeys.HOTJAR_PASS
+import ar.com.phostech.demo.entities.InsigthsCredentials
+import ar.com.phostech.demo.entities.NoInsightsCredentials
 import ar.com.phostech.vertx.EventBusConsumer
 import ar.com.phostech.vertx.core.configuration.ConfigurationService
-import ar.com.phostech.vertx.response.FailedResponse
+import ar.com.phostech.vertx.response.Response
+import ar.com.phostech.vertx.response.ResponseBuilder
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import io.vertx.circuitbreaker.CircuitBreaker
-import io.vertx.core.Vertx
 import io.vertx.core.eventbus.EventBus
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
@@ -49,7 +51,10 @@ class CustomerSatisfactionConsumer
 
         if (available) {
             log.info("Response from cache")
-            respondWith(message, Supplier { credentials })
+            respondWith(message, Supplier {
+                val stored = credentials.mapTo(InsigthsCredentials::class.java)
+                ResponseBuilder.from(stored)
+            })
             return
         }
 
@@ -62,7 +67,7 @@ class CustomerSatisfactionConsumer
                 .put("email", configurationService.getString(HOTJAR_EMAIL))
                 .put("password", configurationService.getString(HOTJAR_PASS))
                 , { ar ->
-                val options = LinkedHashMap<Boolean, Supplier<JsonObject>>()
+                val options = LinkedHashMap<Boolean, Supplier<Response<InsigthsCredentials>>>()
                 options[true] = Supplier {
                     val entity = ar.result().body().toJsonObject()
                     fromResult(entity)
@@ -71,40 +76,43 @@ class CustomerSatisfactionConsumer
                     fromThrowable(ar.cause())
                 }
 
-                val supplier = options.getOrDefault(ar.succeeded(), Supplier { JsonObject() })
+                val supplier = options.getOrDefault(ar.succeeded(), Supplier { ResponseBuilder.from(NoInsightsCredentials) })
                 respondWith(message, supplier)
             })
 
 
     }
 
-    fun fromThrowable(th: Throwable): JsonObject {
-        return JsonObject(
-            FailedResponse(
-                500,
-                th.toString().replace("[\r?\n]+", " "),
-                th.stackTrace.map { element -> element.toString() }
-            ).enconde()
-        )
+    fun fromThrowable(th: Throwable): Response<InsigthsCredentials> {
+        return ResponseBuilder.fromThrowable(th)
     }
 
-    fun fromResult(response: JsonObject): JsonObject {
+    fun fromResult(response: JsonObject): Response<InsigthsCredentials> {
         log.info("received: {0}", response.toString())
 
-        val jsonObject = JsonObject()
-        KEYS_TO_STORE
-            .forEach { key: String ->
-                jsonObject.put(key, response.getValue(key))
-            }
+        val credentials = Optional
+            .ofNullable(response.getBoolean("success"))
+            .map {
+                if (it) InsigthsCredentials(
+                    response.getLong("user_id"),
+                    response.getString("user_name"),
+                    response.getString("user_email"),
+                    response.getString("access_key"),
+                    true
+                ) else NoInsightsCredentials
+            }.get()
 
-        jsonObject.put("valid", true)
-        configurationService.setProperty(CREDENTIALS_KEY, jsonObject)
+        configurationService.setProperty(CREDENTIALS_KEY, JsonObject.mapFrom(credentials))
 
-        return jsonObject
+        return ResponseBuilder.from(credentials)
     }
 
-    fun respondWith(message: Message<JsonObject>, supplier: Supplier<JsonObject>) {
-        message.reply(supplier.get())
+    fun respondWith(message: Message<JsonObject>, supplier: Supplier<out Response<InsigthsCredentials>>) {
+        message.reply(
+            JsonObject.mapFrom( // It is easier to store as a JsonObject since it is not a cyclic
+                supplier.get()
+            )
+        )
     }
 
 }

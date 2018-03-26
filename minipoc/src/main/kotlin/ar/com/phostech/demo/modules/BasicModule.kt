@@ -1,8 +1,8 @@
 package ar.com.phostech.demo.modules
 
-import ar.com.phostech.demo.consumers.CustomerSatisfactionConsumer
-import ar.com.phostech.demo.routers.CustomerSatisfactionRouter
-import ar.com.phostech.demo.routers.DemoRouter
+import ar.com.phostech.demo.interface_adapters.consumers.CustomerSatisfactionConsumer
+import ar.com.phostech.demo.interface_adapters.routers.CustomerSatisfactionRouter
+import ar.com.phostech.demo.interface_adapters.routers.DemoRouter
 import ar.com.phostech.vertx.EventBusConsumer
 import ar.com.phostech.vertx.Mountable
 import ar.com.phostech.vertx.core.circuitbreakers.CircuitBreakerFactory

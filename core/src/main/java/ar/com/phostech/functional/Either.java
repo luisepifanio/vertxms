@@ -4,6 +4,7 @@ import ar.com.phostech.functional.utils.ThrowingSupplier;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -12,7 +13,7 @@ import java.util.stream.Stream;
 
 import static ar.com.phostech.functional.utils.FunctionUtils.sneakyThrow;
 
-public class Either<S, F> {
+public class Either<S, F> implements Serializable {
 
     private static final Logger log = LoggerFactory.getLogger(Either.class);
 
@@ -65,12 +66,25 @@ public class Either<S, F> {
         }
     }
 
+    public void consumeOn(Callback<S> callback) {
+        Objects.requireNonNull(callback, "callback could not be null");
+        if (hasExpected()) {
+            callback.success(expected());
+        } else if (alternative() instanceof Throwable) {
+            Throwable throwable = ((Throwable) alternative());
+            callback.failure(throwable);
+        } else {
+            log.warn("alternative is not bound to a Throwable ({0})", alternative());
+            callback.failure(null);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public static <A, B extends Throwable> Either<A, B> fromCatching(final ThrowingSupplier<A> code, final Class<B>... exceptionTypes) {
         Objects.requireNonNull(code, "code could not be null");
         Objects.requireNonNull(exceptionTypes, "exceptionType could not be null");
         List<Class<B>> classes = Stream.of(exceptionTypes)
-                .filter(e -> null != e)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         if (classes.isEmpty()) {
@@ -85,9 +99,9 @@ public class Either<S, F> {
             if (matches) {
                 return Either.failureOf((B) throwable);
             }
-            log.warn(">> Something went wrong",throwable);
+            log.warn(">> Something went wrong", throwable);
             // Don't like to re-throw an exception!
-            sneakyThrow(throwable) ;
+            sneakyThrow(throwable);
         }
         return null; // Hope this is won't happens
     }

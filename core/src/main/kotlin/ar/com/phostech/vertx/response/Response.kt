@@ -2,10 +2,8 @@ package ar.com.phostech.vertx.response
 
 import java.io.Serializable
 
-interface Response : Serializable {
-    fun succeeded(): Boolean {
-        return true
-    }
-
+interface Response<out T> : Serializable {
+    fun succeeded(): Boolean
     fun enconde(): String
+    fun getData(): T?
 }

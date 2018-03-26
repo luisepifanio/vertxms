@@ -3,13 +3,17 @@ package ar.com.phostech.vertx.response
 import io.vertx.core.json.JsonObject
 import java.util.*
 
-class FailedResponse(
+class FailedResponse<T>(
     val code: Int,
     val message: String,
     val stack: List<String> = Collections.emptyList()
-) : Response {
+) : Response<T> {
     override fun succeeded(): Boolean {
         return false
+    }
+
+    override fun getData(): T? {
+        return null
     }
 
     override fun enconde(): String {
