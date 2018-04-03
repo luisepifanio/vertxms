@@ -16,23 +16,34 @@ class InsigthsLoginServiceDefinitionImpl(val eb: EventBus) : InsigthsLoginServic
     private val log = LoggerFactory.getLogger(InsigthsLoginServiceDefinitionImpl::class.java)
 
     override fun obtainCredentials(callback: Callback<Response<InsigthsCredentials>>) {
-        eb.send<InsigthsCredentials>(BusPaths.HOTJAR_LOGIN,
+        eb.send<InsigthsCredentials>(
+            BusPaths.HOTJAR_LOGIN,
             null,
             { asyncResult ->
 
                 val options = LinkedHashMap<
                     Boolean,
-                    Function1<AsyncResult<Message<InsigthsCredentials>>, Response<InsigthsCredentials>>
+                    (asyncResult: AsyncResult<Message<InsigthsCredentials>>) -> Response<InsigthsCredentials>
                     >()
                 options[true] = this::result
                 options[false] = this::fromThrowable
 
-                options.getOrDefault(asyncResult.succeeded(), this::default)
-                    .invoke(asyncResult)
+                try {
+                    val credentials = options.getOrDefault(
+                        asyncResult.succeeded(),
+                        this::default
+                    ).invoke(asyncResult)
+                    callback.success(credentials)
+                } catch (e: Throwable) {
+                    log.error("[event:login_failed] handling failure")
+                    callback.failure(e)
+                }
+
             })
     }
 
     private fun default(asyncResult: AsyncResult<Message<InsigthsCredentials>>): Response<InsigthsCredentials> {
+        asyncResult // Just it
         return ResponseBuilder.from(NoInsightsCredentials)
     }
 

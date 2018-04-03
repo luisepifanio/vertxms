@@ -19,8 +19,7 @@ import io.vertx.ext.web.client.WebClient
 import java.util.*
 import java.util.function.Supplier
 
-
-class CustomerSatisfactionConsumer
+class CredentialsFetchConsumer
 @Inject constructor(
     @Named("hotjarCircuitBreaker") val circuitBreaker: CircuitBreaker,
     val webClient: WebClient,
@@ -28,10 +27,7 @@ class CustomerSatisfactionConsumer
 ) : EventBusConsumer {
 
     private val log = LoggerFactory.getLogger(EventBusConsumer::class.java)
-    private val CREDENTIALS_KEY = "credentials"
-    private val KEYS_TO_STORE = Collections.unmodifiableList(
-        listOf("access_key", "user_id", "user_email", "user_name")
-    )
+    private val CREDENTIALS = "credentials"
 
     override fun mount(eventBus: EventBus) {
         eventBus.consumer<JsonObject>(BusPaths.HOTJAR_LOGIN, this::handleMessage)
@@ -43,7 +39,7 @@ class CustomerSatisfactionConsumer
         log.info("Received data request")
 
         //Try to fetch from local storage
-        val credentials = configurationService.getJsonObject(CREDENTIALS_KEY, JsonObject())
+        val credentials = configurationService.getJsonObject(CREDENTIALS, JsonObject())
 
         val available = Optional.ofNullable(
             credentials.getBoolean("valid")
@@ -76,11 +72,12 @@ class CustomerSatisfactionConsumer
                     fromThrowable(ar.cause())
                 }
 
-                val supplier = options.getOrDefault(ar.succeeded(), Supplier { ResponseBuilder.from(NoInsightsCredentials) })
+                val supplier = options.getOrDefault(
+                    ar.succeeded(),
+                    Supplier { ResponseBuilder.from(NoInsightsCredentials) }
+                )
                 respondWith(message, supplier)
             })
-
-
     }
 
     fun fromThrowable(th: Throwable): Response<InsigthsCredentials> {
@@ -102,7 +99,7 @@ class CustomerSatisfactionConsumer
                 ) else NoInsightsCredentials
             }.get()
 
-        configurationService.setProperty(CREDENTIALS_KEY, JsonObject.mapFrom(credentials))
+        configurationService.setProperty(CREDENTIALS, JsonObject.mapFrom(credentials))
 
         return ResponseBuilder.from(credentials)
     }

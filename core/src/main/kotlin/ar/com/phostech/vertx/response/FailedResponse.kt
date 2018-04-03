@@ -1,13 +1,28 @@
 package ar.com.phostech.vertx.response
 
 import io.vertx.core.json.JsonObject
-import java.util.*
+import java.util.Collections.emptyList
 
-class FailedResponse<T>(
+class FailedResponse<T>
+constructor(
     val code: Int,
     val message: String,
-    val stack: List<String> = Collections.emptyList()
+    val stack: List<String> = listOf(),
+    val errorDetails: List<ErrorDetail> = listOf()
 ) : Response<T> {
+
+    constructor(
+        code: Int,
+        message: String
+    ) : this(code, message, listOf<String>(), listOf<ErrorDetail>())
+
+
+    constructor(
+        code: Int,
+        message: String,
+        errorDetails: List<ErrorDetail>
+    ) : this(code, message, listOf<String>(), errorDetails)
+
     override fun succeeded(): Boolean {
         return false
     }
@@ -20,6 +35,7 @@ class FailedResponse<T>(
         return JsonObject()
             .put("error", JsonObject()
                 .put("code", code)
+                .put("details", errorDetails)
                 .put("message", message)
             ).put("stack", stack)
             .encode()

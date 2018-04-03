@@ -1,7 +1,7 @@
 package ar.com.phostech.demo.modules
 
-import ar.com.phostech.demo.interface_adapters.consumers.CustomerSatisfactionConsumer
-import ar.com.phostech.demo.interface_adapters.routers.CustomerSatisfactionRouter
+import ar.com.phostech.demo.interface_adapters.consumers.CredentialsFetchConsumer
+import ar.com.phostech.demo.interface_adapters.routers.ShowCredentialsRouter
 import ar.com.phostech.demo.interface_adapters.routers.DemoRouter
 import ar.com.phostech.vertx.EventBusConsumer
 import ar.com.phostech.vertx.Mountable
@@ -33,20 +33,20 @@ class BasicModule : AbstractModule() {
 
         bind(Mountable::class.java)
             .annotatedWith(Names.named("customer"))
-            .to(CustomerSatisfactionRouter::class.java)
+            .to(ShowCredentialsRouter::class.java)
 
         // Or reference a Set of them to use it in Application iniitalization
         val routerMultiBinder = newSetBinder(binder(), Mountable::class.java)
         routerMultiBinder.addBinding().to(DemoRouter::class.java)
-        routerMultiBinder.addBinding().to(CustomerSatisfactionRouter::class.java)
+        routerMultiBinder.addBinding().to(ShowCredentialsRouter::class.java)
 
         /**CONSUMERS**/
         bind(EventBusConsumer::class.java)
             .annotatedWith(Names.named("customer"))
-            .to(CustomerSatisfactionConsumer::class.java)
+            .to(CredentialsFetchConsumer::class.java)
 
         val consumerMultiBinder = newSetBinder(binder(), EventBusConsumer::class.java)
-        consumerMultiBinder.addBinding().to(CustomerSatisfactionConsumer::class.java)
+        consumerMultiBinder.addBinding().to(CredentialsFetchConsumer::class.java)
 
     }
 

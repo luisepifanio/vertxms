@@ -1,7 +1,5 @@
 package ar.com.phostech.functional;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.function.Consumer;
 
 public interface Callback<T> {
