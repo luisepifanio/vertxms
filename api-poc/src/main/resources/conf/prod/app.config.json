@@ -1,0 +1,6 @@
+{
+    "verticles": {
+        "ar.com.phostech.microservice.poc.verticles.ServerVerticle": {},
+        "ar.com.phostech.microservice.poc.verticles.GreeterVerticle": {}
+    }
+}

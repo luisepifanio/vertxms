@@ -76,11 +76,11 @@ local.properties
 .idea/**/sqlDataSources.xml
 .idea/**/dynamic.xml
 .idea/**/uiDesigner.xml
-
-# Gradle:
 .idea/**/gradle.xml
 .idea/**/libraries
-.gradle/**/*.*
+
+# Gradle:
+**/.gradle/**/*.*
 
 # CMake
 cmake-build-debug/
@@ -173,3 +173,5 @@ log/
 target/
 
 # End of https://www.gitignore.io/api/macos,maven,eclipse,netbeans,intellij+iml,visualstudiocode
+**/.environment
+**/.properties
